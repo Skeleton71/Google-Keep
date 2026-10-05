@@ -1,0 +1,51 @@
+<main>
+  <h1>Notes App</h1>
+
+  <input
+    type="search"
+    name="search"
+    placeholder="Search notes"
+    aria-label="Search notes"
+    [ngModel]="searchQuery"
+    (ngModelChange)="searchQuery = $event"
+  />
+
+  <form class="form" (ngSubmit)="addNote()">
+    <input
+      type="text"
+      name="title"
+      maxlength="120"
+      placeholder="Note title"
+      aria-label="Note title"
+      [(ngModel)]="draftTitle"
+    />
+    <textarea
+      name="content"
+      rows="4"
+      maxlength="5000"
+      placeholder="Write a note..."
+      aria-label="Note content"
+      [(ngModel)]="draftContent"
+    ></textarea>
+    <button type="submit" [disabled]="!draftTitle.trim() && !draftContent.trim()">Add</button>
+  </form>
+
+  <h2>{{ searchQuery ? 'Search results' : 'Saved notes' }}</h2>
+
+  <div *ngIf="visibleNotes.length > 0; else emptyState">
+    <div class="note" *ngFor="let note of visibleNotes">
+      <h3>{{ note.title }}</h3>
+      <p>{{ note.content }}</p>
+      <button type="button" (click)="deleteNote(note.id)" [attr.aria-label]="'Delete ' + note.title">
+        Delete
+      </button>
+    </div>
+  </div>
+
+  <ng-template #emptyState>
+    <p *ngIf="notes().length > 0; else noNotes">No notes match your search.</p>
+    <ng-template #noNotes><p>No notes yet.</p></ng-template>
+  </ng-template>
+
+  <p role="status" aria-live="polite">{{ statusMessage }}</p>
+</main>
