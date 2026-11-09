@@ -1,51 +1,119 @@
 <main>
-  <h1>Notes App</h1>
+  <h1>Notes &amp; Tasks</h1>
 
-  <input
-    type="search"
-    name="search"
-    placeholder="Search notes"
-    aria-label="Search notes"
-    [ngModel]="searchQuery"
-    (ngModelChange)="searchQuery = $event"
-  />
+  <section class="tasks" aria-labelledby="tasks-heading">
+    <h2 id="tasks-heading">Tasks</h2>
 
-  <form class="form" (ngSubmit)="addNote()">
-    <input
-      type="text"
-      name="title"
-      maxlength="120"
-      placeholder="Note title"
-      aria-label="Note title"
-      [(ngModel)]="draftTitle"
-    />
-    <textarea
-      name="content"
-      rows="4"
-      maxlength="5000"
-      placeholder="Write a note..."
-      aria-label="Note content"
-      [(ngModel)]="draftContent"
-    ></textarea>
-    <button type="submit" [disabled]="!draftTitle.trim() && !draftContent.trim()">Add</button>
-  </form>
+    <form class="form" (ngSubmit)="saveTask()">
+      <input
+        type="text"
+        name="taskTitle"
+        maxlength="120"
+        placeholder="What needs to be done?"
+        aria-label="Task title"
+        [(ngModel)]="taskTitle"
+        required
+      />
+      <textarea
+        name="taskDescription"
+        rows="3"
+        maxlength="2000"
+        placeholder="Add a few optional details"
+        aria-label="Task details"
+        [(ngModel)]="taskDescription"
+      ></textarea>
+      <div class="form-actions">
+        <button type="submit" [disabled]="!taskTitle.trim() || taskSaving">
+          {{ taskSaving ? 'Saving...' : editingTaskId ? 'Save changes' : 'Add task' }}
+        </button>
+        <button
+          *ngIf="editingTaskId"
+          type="button"
+          class="secondary-button"
+          (click)="cancelTaskEdit()"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
 
-  <h2>{{ searchQuery ? 'Search results' : 'Saved notes' }}</h2>
-
-  <div *ngIf="visibleNotes.length > 0; else emptyState">
-    <div class="note" *ngFor="let note of visibleNotes">
-      <h3>{{ note.title }}</h3>
-      <p>{{ note.content }}</p>
-      <button type="button" (click)="deleteNote(note.id)" [attr.aria-label]="'Delete ' + note.title">
-        Delete
-      </button>
+    <p *ngIf="tasksLoading" role="status">Loading tasks...</p>
+    <p *ngIf="!tasksLoading && tasks().length === 0 && !taskMessage">No tasks yet.</p>
+    <div *ngFor="let task of tasks()" class="task" [class.task-completed]="task.completed">
+      <input
+        type="checkbox"
+        [checked]="task.completed"
+        (change)="toggleTask(task)"
+        [attr.aria-label]="'Mark ' + task.title + (task.completed ? ' as not done' : ' as done')"
+      />
+      <div class="task-details">
+        <h3>{{ task.title }}</h3>
+        <p *ngIf="task.description">{{ task.description }}</p>
+      </div>
+      <div class="task-actions">
+        <button type="button" class="secondary-button" (click)="editTask(task)">Edit</button>
+        <button
+          type="button"
+          class="delete-button"
+          (click)="deleteTask(task)"
+          [disabled]="deletingTaskId === task.id"
+        >
+          {{ deletingTaskId === task.id ? 'Deleting...' : 'Delete' }}
+        </button>
+      </div>
     </div>
-  </div>
+    <p role="status" aria-live="polite">{{ taskMessage }}</p>
+  </section>
 
-  <ng-template #emptyState>
-    <p *ngIf="notes().length > 0; else noNotes">No notes match your search.</p>
-    <ng-template #noNotes><p>No notes yet.</p></ng-template>
-  </ng-template>
+  <section class="notes" aria-labelledby="notes-heading">
+    <h2 id="notes-heading">Notes</h2>
 
-  <p role="status" aria-live="polite">{{ statusMessage }}</p>
+    <input
+      type="search"
+      name="search"
+      placeholder="Search notes"
+      aria-label="Search notes"
+      [ngModel]="searchQuery"
+      (ngModelChange)="searchQuery = $event"
+    />
+
+    <form class="form" (ngSubmit)="addNote()">
+      <input
+        type="text"
+        name="title"
+        maxlength="120"
+        placeholder="Note title"
+        aria-label="Note title"
+        [(ngModel)]="draftTitle"
+      />
+      <textarea
+        name="content"
+        rows="4"
+        maxlength="5000"
+        placeholder="Write a note..."
+        aria-label="Note content"
+        [(ngModel)]="draftContent"
+      ></textarea>
+      <button type="submit" [disabled]="!draftTitle.trim() && !draftContent.trim()">Add</button>
+    </form>
+
+    <h2>{{ searchQuery ? 'Search results' : 'Saved notes' }}</h2>
+
+    <div *ngIf="visibleNotes.length > 0; else emptyState">
+      <div class="note" *ngFor="let note of visibleNotes">
+        <h3>{{ note.title }}</h3>
+        <p>{{ note.content }}</p>
+      <button type="button" (click)="deleteNote(note.id)" [attr.aria-label]="'Delete ' + note.title">
+          Delete
+        </button>
+      </div>
+    </div>
+
+    <ng-template #emptyState>
+      <p *ngIf="notes().length > 0; else noNotes">No notes match your search.</p>
+      <ng-template #noNotes><p>No notes yet.</p></ng-template>
+    </ng-template>
+
+    <p role="status" aria-live="polite">{{ statusMessage }}</p>
+  </section>
 </main>
